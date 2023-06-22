@@ -8,6 +8,7 @@ public class GameInput : MonoBehaviour
 {
 
     public event EventHandler OnInteractAction;
+    public event EventHandler OnInteractAlternateAction;
     
     private PlayerInputActions playerInputActions;
     
@@ -16,8 +17,16 @@ public class GameInput : MonoBehaviour
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
         
-        //事件绑定
+        //事件绑定Interact
         playerInputActions.Player.Interact.performed += Interact_performed;
+        
+        //绑定InteractAlternate
+        playerInputActions.Player.InteractAlternate.performed += InteractAlternate_performed;
+    }
+
+    private void InteractAlternate_performed(InputAction.CallbackContext obj)
+    {
+        OnInteractAlternateAction?.Invoke(this,EventArgs.Empty);
     }
 
     private void Interact_performed(InputAction.CallbackContext obj)
