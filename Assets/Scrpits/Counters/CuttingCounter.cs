@@ -5,14 +5,10 @@ using UnityEditor.MemoryProfiler;
 using UnityEngine;
 using System;
 
-public class CuttingCounter : BaseCounter
+public class CuttingCounter : BaseCounter , IHasProgress
 {
-    public event EventHandler<OnProgressBarChangedEventArgs> OnProgressBarChanged;
-    public class OnProgressBarChangedEventArgs : EventArgs
-    {
-        public float progressNormalized;
-    }
-    
+    public event EventHandler<IHasProgress.OnProgressBarChangedEventArgs> OnProgressBarChanged;
+
     // 用于触发动画
     public event EventHandler OnCut;
     
@@ -36,7 +32,7 @@ public class CuttingCounter : BaseCounter
                     cuttingProgress = 0;
                     // 改变UI
                     CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectS0());
-                    OnProgressBarChanged?.Invoke(this , new OnProgressBarChangedEventArgs
+                    OnProgressBarChanged?.Invoke(this , new IHasProgress.OnProgressBarChangedEventArgs
                     {
                         progressNormalized = (float)cuttingProgress / cuttingRecipeSO.cuttringProgressMax
                     });
@@ -75,7 +71,7 @@ public class CuttingCounter : BaseCounter
             OnCut?.Invoke(this , EventArgs.Empty);
             CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectS0());
             // 修改UI
-            OnProgressBarChanged?.Invoke(this , new OnProgressBarChangedEventArgs
+            OnProgressBarChanged?.Invoke(this , new IHasProgress.OnProgressBarChangedEventArgs
             {
                 progressNormalized = (float)cuttingProgress / cuttingRecipeSO.cuttringProgressMax
             });
