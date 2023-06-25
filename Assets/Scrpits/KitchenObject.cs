@@ -7,7 +7,7 @@ public class KitchenObject : MonoBehaviour
 {
     [SerializeField] private KitchenObjectSO kitchenObjectS0;
 
-    private IKitchenObjectParent kitchenObjectParent;
+    private IKitchenObjectParent kitchenObjectParent; // 拥有此物品的父亲
 
     public KitchenObjectSO GetKitchenObjectS0()
     {
@@ -28,7 +28,7 @@ public class KitchenObject : MonoBehaviour
             Debug.LogError("IKitchenObjectParent already has a KitchenObject!");
         }
         
-        kitchenObjectParent.SetKitchenObject(this); 
+        kitchenObjectParent.SetKitchenObject(this); // 父亲拥有此物品
         
         this.transform.parent = kitchenObjectParent.GetKitchenObjectFollowTransform();
         this.transform.localPosition = Vector3.zero;
