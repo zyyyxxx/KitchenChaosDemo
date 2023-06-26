@@ -51,6 +51,15 @@ public class CuttingCounter : BaseCounter , IHasProgress
             if (player.HasKitchenObject())
             {
                 // 玩家携带物品
+                if (player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject))
+                {
+                    //携带的是盘子 , 把clearCounter上的物品放到盘子上
+                    if (plateKitchenObject.TryAddIngredient(GetKitchenObject().GetKitchenObjectS0()))
+                    {
+                        GetKitchenObject().DestroySelf();
+                    }
+
+                }
             }
             else
             {
