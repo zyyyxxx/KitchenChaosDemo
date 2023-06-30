@@ -7,6 +7,7 @@ using System;
 
 public class CuttingCounter : BaseCounter , IHasProgress
 {
+    public static event EventHandler OnAnyCut; //用于所有cutting 静态事件可以通知全局，因为它们只与类本身相关，而不是与类的实例相关。这意味着您可以在不实例化类或对象的情况下触发静态事件，并且所有订阅了该事件的对象都会接收到通知。
     public event EventHandler<IHasProgress.OnProgressBarChangedEventArgs> OnProgressBarChanged;
 
     // 用于触发动画
@@ -78,6 +79,8 @@ public class CuttingCounter : BaseCounter , IHasProgress
             cuttingProgress++;
             
             OnCut?.Invoke(this , EventArgs.Empty);
+            OnAnyCut?.Invoke(this ,EventArgs.Empty);
+            
             CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectS0());
             // 修改UI
             OnProgressBarChanged?.Invoke(this , new IHasProgress.OnProgressBarChangedEventArgs
