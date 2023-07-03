@@ -9,6 +9,11 @@ public class BaseCounter : MonoBehaviour , IKitchenObjectParent
                                                            //而不是与类的实例相关。这意味着您可以在不实例化类或对象的情况下触发静态事件，
                                                            //并且所有订阅了该事件的对象都会接收到通知。
 
+    public static void ResetStaticData()
+    {
+        OnAnyObjectPlacedHere = null;
+    }
+                                                           
     [SerializeField] private Transform counterTopPoint;
 
     private KitchenObject kitchenObject;

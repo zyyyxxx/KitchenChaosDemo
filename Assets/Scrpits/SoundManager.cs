@@ -8,6 +8,11 @@ public class SoundManager : MonoBehaviour
 {
     public static SoundManager Instance { get; private set; }
     
+    private void Awake()
+    {
+        Instance = this;
+    }
+    
     [SerializeField] private AudioClipRefSO audioClipRefSO; 
     private void Start()
     {
@@ -18,12 +23,7 @@ public class SoundManager : MonoBehaviour
         BaseCounter.OnAnyObjectPlacedHere += BaseCounter_OnAnyObjectPlacedHere;
         TrashCounter.OnAnyObjectTrashed += TrashCounter_OnAnyObjectTrashed;
     }
-
-    private void Awake()
-    {
-        Instance = this;
-    }
-
+    
     private void TrashCounter_OnAnyObjectTrashed(object sender, EventArgs e)
     {
         TrashCounter trashCounter = sender as TrashCounter;
