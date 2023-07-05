@@ -7,7 +7,15 @@ using UnityEngine;
 public class Player : NetworkBehaviour , IKitchenObjectParent
 {
 
-    //public static Player Instance { get; private set; }
+    public static event EventHandler OnAnyPlayerSpawned;
+    public static event EventHandler OnAnyPickedSomething; 
+
+    public static void ResetStaticData()
+    {
+        OnAnyPlayerSpawned = null;
+    }
+    
+    public static Player LocalInstance { get; private set; }
 
 
     public event EventHandler OnPickedSomething; 
@@ -38,6 +46,17 @@ public class Player : NetworkBehaviour , IKitchenObjectParent
         GameInput.Instance.OnInteractAlternateAction += GameInput_OnInteractAlternateAction;
     }
 
+    public override void OnNetworkSpawn()
+    {
+        if (IsOwner)
+        {
+            LocalInstance = this;
+        }
+        
+        OnAnyPlayerSpawned?.Invoke(this , EventArgs.Empty);
+    }
+
+
     private void GameInput_OnInteractAlternateAction(object sender, EventArgs e)
     {
         if (!KitchenGameManager.Instance.IsGamePlaying()) return;
@@ -60,7 +79,9 @@ public class Player : NetworkBehaviour , IKitchenObjectParent
     // Update is called once per frame
     private void Update()
     {
+        if (!IsOwner) return;
         HandleMovement();
+        //HandleMovementServerAuth();
         HandleInteractions();
     }
 
@@ -98,7 +119,73 @@ public class Player : NetworkBehaviour , IKitchenObjectParent
             SetSelectedCounter(null);
         }
     }
+    
+    
+    // Multiplayer Server Authority
+    private void HandleMovementServerAuth()
+    {
+        Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
+        HandleMovementServerRpc(inputVector);
+    }
+    
+    [ServerRpc(RequireOwnership = false)] //// Whether or not the ServerRpc should only be run if executed by the owner of the object
+    private void HandleMovementServerRpc(Vector2 inputVector)
+    {
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
 
+        float moveDistance = Time.deltaTime * moveSpeed;
+        float playerRadius = .7f;
+        float playerHeight = 2f;
+        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight , playerRadius, moveDir ,moveDistance);
+
+        if (!canMove)
+        {   
+            // 我们希望贴着墙壁进行对角线移动时，可以左右移动
+            
+            // Cannot move towards moveDir
+            
+            // Attempt only X movement
+            Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
+            canMove = moveDir.x != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight , playerRadius, moveDirX ,moveDistance);
+
+            if (canMove)
+            {
+                // Can mvoe only on the X
+                moveDir = moveDirX;
+            }
+            else
+            {
+                // 无法在X轴移动，尝试Z轴
+                Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
+                canMove = moveDir.z != 0 && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight , playerRadius, moveDirZ ,moveDistance);
+
+                if (canMove)
+                {
+                    moveDir = moveDirZ;
+                }
+                else
+                {
+                    // 完全不能移动
+                }
+            }
+            
+        }
+        
+        if (canMove)
+        {
+            transform.position += moveDir * moveDistance;    
+        }
+        
+        isWalking = moveDir != Vector3.zero;
+        
+        float rotateSpeed = 10f;
+        transform.forward = Vector3.Slerp(transform.forward , moveDir , Time.deltaTime * rotateSpeed);
+    }
+    
+    
+    
+    
+    
     private void HandleMovement()
     {
         Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
@@ -176,6 +263,7 @@ public class Player : NetworkBehaviour , IKitchenObjectParent
         if (kitchenObject != null)
         {
             OnPickedSomething?.Invoke(this,EventArgs.Empty);
+            OnAnyPickedSomething?.Invoke(this ,EventArgs.Empty);
         }
     }
 

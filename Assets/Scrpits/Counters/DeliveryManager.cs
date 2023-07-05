@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 
-public class DeliveryManager : MonoBehaviour
+public class DeliveryManager : NetworkBehaviour
 {
 
     public event EventHandler OnRecipeSpawn;
@@ -17,19 +18,21 @@ public class DeliveryManager : MonoBehaviour
     [SerializeField] private RecipeListSO recipeListSO;
     
     private List<RecipeSO> waitingRecipeSOList;
-    private float spawnRecipeTimer;
+    private float spawnRecipeTimer = 4f;
     private float spawnRecipeTimerMax = 4f;
     private int waitingRecipeMax = 4;
     private int successfulRecipeAmount; // 用于UI
 
     private void Awake()
     {
-        Instance = this;
+        Instance = this;  
         waitingRecipeSOList = new List<RecipeSO>();
     }
 
     private void Update()
     {
+        if (!IsServer) return;
+        // Server Only
         spawnRecipeTimer -= Time.deltaTime;
         if (spawnRecipeTimer <= 0f)
         {
@@ -37,14 +40,25 @@ public class DeliveryManager : MonoBehaviour
             if (waitingRecipeSOList.Count < waitingRecipeMax)
             {
                 // 获取一个配方SO,并加入等待列表
-                RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[Random.Range(0, recipeListSO.recipeSOList.Count)]; 
+                int waitingRecipeSOIndex = Random.Range(0, recipeListSO.recipeSOList.Count);
+                 
                 
-                waitingRecipeSOList.Add(waitingRecipeSO);
+                SpawnNewWaitingRecipeClientRpc(waitingRecipeSOIndex);
                 
-                OnRecipeSpawn?.Invoke(this ,EventArgs.Empty);
+                
             }
             
         }
+    }
+    
+    [ClientRpc]
+    private void SpawnNewWaitingRecipeClientRpc(int waitingRecipeSOIndex)
+    {
+        RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[waitingRecipeSOIndex];
+        
+        waitingRecipeSOList.Add(waitingRecipeSO);
+                
+        OnRecipeSpawn?.Invoke(this ,EventArgs.Empty);
     }
 
     public void DeliverRecipe(PlateKitchenObject plateKitchenObject)
@@ -81,22 +95,46 @@ public class DeliveryManager : MonoBehaviour
                 if (plateContentMatchRecipe)
                 {
                     // 提交正确
-                    successfulRecipeAmount++;
-                    
-                    waitingRecipeSOList.RemoveAt(i);
-                    
-                    OnRecipeCompleted?.Invoke(this,EventArgs.Empty);
-                    OnRecipeSuccess?.Invoke(this,EventArgs.Empty);
+                    DeliverCorrectRecipeServerRpc(i);
                     return;
                 }
                 
             }
         }
         // 所有都未匹配成功
+        DeliverIncorrectRecipeServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void DeliverIncorrectRecipeServerRpc()
+    {
+        DeliverIncorrectRecipeClientRpc();
+    }
+    
+    [ClientRpc]
+    private void DeliverIncorrectRecipeClientRpc()
+    {
         OnRecipeFailed?.Invoke(this,EventArgs.Empty);
         Debug.Log("Player did not deliver a correct recipe");
     }
+    
+    [ServerRpc(RequireOwnership = false)]
+    private void DeliverCorrectRecipeServerRpc(int waitingRecipeSOListIndex)
+    {
+        DeliverCorrectRecipeClientRpc(waitingRecipeSOListIndex);
+    }
 
+    [ClientRpc]
+    private void DeliverCorrectRecipeClientRpc(int waitingRecipeSOListIndex)
+    {
+        successfulRecipeAmount++;
+                    
+        waitingRecipeSOList.RemoveAt(waitingRecipeSOListIndex);
+                    
+        OnRecipeCompleted?.Invoke(this,EventArgs.Empty);
+        OnRecipeSuccess?.Invoke(this,EventArgs.Empty);
+    }
+    
     public List<RecipeSO> GetWaitingrRecipeSOList()
     {
         return waitingRecipeSOList;
