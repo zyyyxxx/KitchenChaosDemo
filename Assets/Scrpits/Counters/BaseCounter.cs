@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class BaseCounter : MonoBehaviour , IKitchenObjectParent
+public class BaseCounter : NetworkBehaviour , IKitchenObjectParent
 {
     public static event EventHandler OnAnyObjectPlacedHere;//静态事件可以通知全局，因为它们只与类本身相关，
                                                            //而不是与类的实例相关。这意味着您可以在不实例化类或对象的情况下触发静态事件，
@@ -56,5 +57,10 @@ public class BaseCounter : MonoBehaviour , IKitchenObjectParent
     public bool HasKitchenObject()
     {
         return kitchenObject != null;
+    }
+
+    public NetworkObject GetNetworkObject()
+    {
+        return NetworkObject;
     }
 }
