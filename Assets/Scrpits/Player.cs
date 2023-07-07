@@ -35,11 +35,7 @@ public class Player : NetworkBehaviour , IKitchenObjectParent
     private BaseCounter selectedCounter;
     private KitchenObject kitchenObject;
 
-    private void Awake()
-    {
-        //Instance = this;
-    }
-
+    
     private void Start()
     {
         GameInput.Instance.OnInteractAction += GameInput_OnInteractAction;

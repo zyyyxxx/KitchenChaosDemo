@@ -35,7 +35,8 @@ public class ClearCounter : BaseCounter
                     //携带的是盘子 , 把clearCounter上的物品放到盘子上
                     if (plateKitchenObject.TryAddIngredient(GetKitchenObject().GetKitchenObjectS0()))
                     {
-                        GetKitchenObject().DestroySelf();     
+                        KitchenObject.DestoryKitchenObject(GetKitchenObject());
+                        //GetKitchenObject().DestroySelf();     
                     }
                     
                 }
@@ -47,7 +48,8 @@ public class ClearCounter : BaseCounter
                         // 此时Clear Counter上有盘子，把玩家手上的物品放在盘子上
                         if (plateKitchenObject.TryAddIngredient(player.GetKitchenObject().GetKitchenObjectS0()))
                         {
-                            player.GetKitchenObject().DestroySelf();
+                            KitchenObject.DestoryKitchenObject(player.GetKitchenObject());
+                            //player.GetKitchenObject().DestroySelf();
                         }
 
                     }
