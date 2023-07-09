@@ -27,6 +27,7 @@ public class DeliveryManager : NetworkBehaviour
     {
         Instance = this;  
         waitingRecipeSOList = new List<RecipeSO>();
+        
     }
 
     private void Update()

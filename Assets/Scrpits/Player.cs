@@ -55,6 +55,21 @@ public class Player : NetworkBehaviour , IKitchenObjectParent
         transform.position = spawnPositionList[(int)OwnerClientId];
         
         OnAnyPlayerSpawned?.Invoke(this , EventArgs.Empty);
+
+        if (IsServer)
+        {
+            // The callback to invoke when a client disconnects.
+            // This callback is only ran on the server and on the local client 
+            NetworkManager.Singleton.OnClientDisconnectCallback += NetworkManager_OnClientDisconnectCallback;
+        }
+    }
+
+    private void NetworkManager_OnClientDisconnectCallback(ulong clientID)
+    {
+        if (clientID == OwnerClientId && HasKitchenObject())
+        {
+            KitchenObject.DestoryKitchenObject(GetKitchenObject());
+        }
     }
 
 
