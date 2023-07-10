@@ -12,19 +12,39 @@ public class KitchenGameMultiplayer : NetworkBehaviour
 
     public event EventHandler OnTryingToJoinGame;
     public event EventHandler OnFailToJoinGame;
+    public event EventHandler OnPlayerDataNetworkListChanged;
 
     [SerializeField] private KitchenObjectListSO kitchenObjectListSO;
+
+    private NetworkList<PlayerData> playerDataNetworkList;
+
     private void Awake()
     {
         Instance = this;
         
         DontDestroyOnLoad(gameObject);
+        playerDataNetworkList = new NetworkList<PlayerData>();
+        playerDataNetworkList.OnListChanged += PlayerDataNetworkListOnOnListChanged;
+    }
+
+    private void PlayerDataNetworkListOnOnListChanged(NetworkListEvent<PlayerData> changeevent)
+    {
+        OnPlayerDataNetworkListChanged?.Invoke(this , EventArgs.Empty);
     }
 
     public void StartHost()
     {
         Unity.Netcode.NetworkManager.Singleton.ConnectionApprovalCallback += ConnectionApprovalCallback;
+        Unity.Netcode.NetworkManager.Singleton.OnClientConnectedCallback += SingletonOnOnClientConnectedCallback;
         NetworkManager.Singleton.StartHost();
+    }
+
+    private void SingletonOnOnClientConnectedCallback(ulong clientID)
+    {
+        playerDataNetworkList.Add(new PlayerData
+        {
+            clientID = clientID,
+        });
     }
 
     private void ConnectionApprovalCallback(NetworkManager.ConnectionApprovalRequest connectionApprovalRequest, 
@@ -118,5 +138,10 @@ public class KitchenGameMultiplayer : NetworkBehaviour
         
         kitchenObject.ClearKitchenObjectOnParent();
 
+    }
+
+    public bool IsPlayerIndexConnected(int playerIndex)
+    {
+        return playerIndex < playerDataNetworkList.Count;
     }
 }
